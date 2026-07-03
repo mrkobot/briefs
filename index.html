@@ -6,6 +6,7 @@
   <title>Co-Intelligence Briefs — What If Love</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?Inter:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/4.3.9/iframeResizer.contentWindow.min.js"></script>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -131,11 +132,11 @@ const S = `
     color: var(--muted);
   }
   .left-heading {
-    font-size: 2rem;
+    font-size: 2.6rem;
     font-weight: 900;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
-    line-height: 1.15;
+    line-height: 1.1;
     letter-spacing: -0.03em;
   }
   .left-count {
@@ -145,7 +146,7 @@ const S = `
   }
   .left-desc {
     font-size: 14px;
-    color: var(--muted);
+    color: #1A1A1A;
     line-height: 1.65;
     font-weight: 400;
     margin-top: 4px;
@@ -194,7 +195,7 @@ const S = `
     overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transition: max-height 0.38s ease, opacity 0.25s ease, transform 0.3s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease;
     transform: translateY(5px);
     padding-left: 25px;
   }
@@ -227,7 +228,7 @@ const S = `
     transition: color 0.18s;
   }
   .act-btn:hover { color: var(--terra); }
-  .act-sec { color: var(--muted); font-weight: 500; }
+  .act-sec { font-weight: 500; }
   .act-sec:hover { color: var(--terra); }
 
   /* Loading */
@@ -460,15 +461,7 @@ function App() {
   const [busy, setBusy]             = useState(false);
   const wrapRef = useRef(null);
 
-  /* iframe resize */
-  useEffect(() => {
-    const ro = new ResizeObserver(() => {
-      const h = wrapRef.current?.offsetHeight ?? 0;
-      window.parent.postMessage({ type: 'X-resize', height: h }, '*');
-    });
-    if (wrapRef.current) ro.observe(wrapRef.current);
-    return () => ro.disconnect();
-  }, []);
+  /* resize handled by iFrame Resizer library */
 
   /* Fetch brief list — re-runs when page changes */
   useEffect(() => {
@@ -608,8 +601,7 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
           <p className="left-count">{briefs.length} published</p>
         )}
         <p className="left-desc">
-          Arguments on what AI means for how humans work, learn, and lead.
-          Hover any title to read the core claim.
+          Co-Intelligence. Design-led AI Governance. The Future of Learning Systems.
         </p>
       </div>
       <div className="right-col">
