@@ -17,31 +17,6 @@
 </head>
 <body>
 <div id="root"></div>
-
-<script>
-  let lastHeight = 0;
-  
-  function sendHeight() {
-    const container = document.querySelector('.wrap') || document.getElementById('root');
-    if (!container) return;
-
-    const currentHeight = container.offsetHeight;
-    
-    if (currentHeight !== lastHeight && currentHeight > 10) {
-      lastHeight = currentHeight;
-      
-      if (window !== window.parent) {
-        window.parent.postMessage(
-          { type: 'X-resize', height: currentHeight }, 
-          'https://whatiflove.org'
-        );
-      }
-    }
-  }
-
-  setInterval(sendHeight, 150);
-</script>
-
 <script type="text/babel">
 const { useState, useEffect, useRef } = React;
 
@@ -49,7 +24,12 @@ const SITE     = 'https://whatiflove.org';
 const CAT_SLUG = 'co-intelligence-briefs';
 const WEBHOOK  = 'MAKE_WEBHOOK_URL_HERE';
 
-/* ─── Curated content ───────────────────────────────────────────── */
+/* ─── Curated content ─────────────────────────────────────────────
+   Key: WordPress post slug.
+   Add an entry here when a new brief is published.
+   Without one, the brief appears with its WordPress excerpt as
+   the hover thesis, and opens directly to the full brief tab.
+──────────────────────────────────────────────────────────────────── */
 const CURATED = {
   'the-skills-everyone-is-building-wont-be-the-skills-that-matter': {
     thesis: 'Most AI training invests in skills that will expire as AI improves—the durable ones are the ones nobody has started measuring yet.',
@@ -128,11 +108,14 @@ const S = `
     border-radius: 12px;
     overflow: hidden;
   }
+
+  /* ── Two-column list ── */
   .list-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
     align-items: stretch;
   }
+
   .left-col {
     padding: 44px 40px 44px 44px;
     border-right: 1px solid var(--border);
@@ -148,11 +131,11 @@ const S = `
     color: var(--muted);
   }
   .left-heading {
-    font-size: 2.6rem;
+    font-size: 2rem;
     font-weight: 900;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
-    line-height: 1.1;
+    line-height: 1.15;
     letter-spacing: -0.03em;
   }
   .left-count {
@@ -167,7 +150,10 @@ const S = `
     font-weight: 400;
     margin-top: 4px;
   }
+
+  /* ── Right col: brief rows ── */
   .right-col { display: flex; flex-direction: column; }
+
   .brief-row {
     padding: 28px 44px 28px 36px;
     border-bottom: 1px solid var(--border);
@@ -177,6 +163,7 @@ const S = `
   .brief-row:last-child { border-bottom: none; }
   .brief-row:hover { background: var(--hover); }
   .brief-row.is-open  { background: var(--hover); }
+
   .row-top { display: flex; align-items: flex-start; gap: 14px; }
   .b-num {
     font-size: 11px;
@@ -201,11 +188,13 @@ const S = `
     font-weight: 400;
     margin-top: 5px;
   }
+
+  /* Thesis expand */
   .thesis-wrap {
     overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transition: opacity 0.22s ease, transform 0.22s ease;
+    transition: max-height 0.38s ease, opacity 0.25s ease, transform 0.3s ease;
     transform: translateY(5px);
     padding-left: 25px;
   }
@@ -238,8 +227,10 @@ const S = `
     transition: color 0.18s;
   }
   .act-btn:hover { color: var(--terra); }
-  .act-sec { font-weight: 500; }
+  .act-sec { color: var(--muted); font-weight: 500; }
   .act-sec:hover { color: var(--terra); }
+
+  /* Loading */
   .loading-row {
     padding: 36px;
     font-size: 13px;
@@ -257,6 +248,8 @@ const S = `
     flex-shrink: 0;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Overlay ── */
   .overlay {
     padding: 44px 48px;
     animation: fadeUp 0.22s ease;
@@ -265,6 +258,7 @@ const S = `
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: none; }
   }
+
   .back-btn {
     display: inline-flex;
     align-items: center;
@@ -282,6 +276,8 @@ const S = `
     letter-spacing: 0.02em;
   }
   .back-btn:hover { color: var(--text); }
+
+  /* Tabs */
   .tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
@@ -304,6 +300,7 @@ const S = `
   }
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--text); border-bottom-color: var(--text); }
+
   .o-label {
     font-size: 11px;
     font-weight: 700;
@@ -331,9 +328,13 @@ const S = `
     margin-bottom: 26px;
     max-width: 660px;
   }
+
+  /* Reading container — left-anchored, 660px ceiling */
   .reading-body {
     max-width: 660px;
   }
+
+  /* Summary body */
   .o-body p {
     font-size: 15px;
     color: #3D3B38;
@@ -342,6 +343,8 @@ const S = `
     font-weight: 400;
   }
   .o-body p:last-child { margin-bottom: 0; }
+
+  /* Full brief WordPress content */
   .wp-body { font-size: 15px; color: #3D3B38; line-height: 1.8; max-width: 660px; }
   .wp-body p { margin-bottom: 16px; font-weight: 400; }
   .wp-body h1, .wp-body h2 {
@@ -368,11 +371,15 @@ const S = `
   .wp-body a:hover { text-decoration: underline; }
   .wp-body figure { margin: 20px 0; }
   .wp-body figcaption { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  /* Hide WordPress share/utility blocks */
   .wp-body .sharedaddy, .wp-body .jp-relatedposts { display: none; }
+
   .full-loading {
     display: flex; align-items: center; gap: 10px;
     font-size: 13px; color: var(--muted); padding: 28px 0;
   }
+
+  /* Subscribe */
   .sub-block {
     margin-top: 40px;
     padding-top: 28px;
@@ -399,6 +406,8 @@ const S = `
   .sub-btn:hover { background: #333; }
   .sub-btn:disabled { opacity: 0.5; cursor: default; }
   .sub-ok { font-size: 13.5px; font-weight: 600; color: var(--text); padding: 10px 0; }
+
+  /* ── Pagination ── */
   .page-nav {
     display: flex;
     justify-content: space-between;
@@ -421,6 +430,7 @@ const S = `
   }
   .nav-btn:hover { color: var(--terra); }
   .nav-spacer { flex: 1; }
+
   @media (max-width: 620px) {
     .list-layout { grid-template-columns: 1fr; }
     .left-col { border-right: none; border-bottom: 1px solid var(--border); padding: 28px 24px; }
@@ -448,12 +458,24 @@ function App() {
   const [email, setEmail]           = useState('');
   const [subbed, setSubbed]         = useState(false);
   const [busy, setBusy]             = useState(false);
+  const wrapRef = useRef(null);
 
-  /* Fetch brief list */
+  /* iframe resize */
+  useEffect(() => {
+    const ro = new ResizeObserver(() => {
+      const h = wrapRef.current?.offsetHeight ?? 0;
+      window.parent.postMessage({ type: 'X-resize', height: h }, '*');
+    });
+    if (wrapRef.current) ro.observe(wrapRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  /* Fetch brief list — re-runs when page changes */
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
+        /* Get category ID once and cache it */
         if (!catIdRef.current) {
           const catRes = await fetch(`${SITE}/wp-json/wp/v2/categories?slug=${CAT_SLUG}`);
           const cats   = await catRes.json();
@@ -490,6 +512,7 @@ function App() {
     setLoadingFull(false);
   };
 
+  /* Open brief—initialTab controls which tab opens first */
   const openBrief = (brief, initialTab) => {
     const hasSummary = !!(CURATED[brief.slug]?.summary);
     const startTab   = initialTab ?? (hasSummary ? 'summary' : 'full');
@@ -498,6 +521,7 @@ function App() {
     setFullHtml('');
     setEmail('');
     setSubbed(false);
+    /* If opening on full tab, fetch immediately */
     if (startTab === 'full') {
       setLoadingFull(true);
       fetch(`${SITE}/wp-json/wp/v2/posts?slug=${brief.slug}&_fields=content`)
@@ -533,7 +557,7 @@ function App() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: S }} />
-      <div className="wrap">
+      <div ref={wrapRef} className="wrap">
         {active ? (
           <Overlay
             brief={active}
@@ -571,6 +595,9 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
   const totalPages  = Math.ceil(totalBriefs / perPage);
   const [expandedId, setExpandedId] = useState(null);
   const toggleRow = (id) => setExpandedId(prev => prev === id ? null : id);
+  /* Brief 01 = oldest ever published; number persists across pages.
+     API returns newest-first, so position i on page p maps to:
+     absoluteNumber = totalBriefs - ((page-1)*perPage + i)        */
   const briefNum = (i) => pad(Math.max(1, totalBriefs - ((page - 1) * perPage + i)));
   return (
     <div className="list-layout">
@@ -581,7 +608,8 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
           <p className="left-count">{briefs.length} published</p>
         )}
         <p className="left-desc">
-          Co-Intelligence. Design-led AI Governance. The Future of Learning Systems.
+          Arguments on what AI means for how humans work, learn, and lead.
+          Hover any title to read the core claim.
         </p>
       </div>
       <div className="right-col">
@@ -630,6 +658,8 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
           );
         })}
       </div>
+
+      {/* Pagination — only rendered when > 1 page exists */}
       {!loading && !error && totalPages > 1 && (
         <div className="page-nav">
           {page < totalPages ? (
