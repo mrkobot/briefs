@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Co-Intelligence Briefs — What If Love</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?Inter:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -131,12 +131,12 @@ const S = `
     color: var(--muted);
   }
   .left-heading {
-    font-size: 2rem;
-    font-weight: 700;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 2.6rem;
+    font-weight: 900;
+    font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
-    line-height: 1.15;
-    letter-spacing: -0.02em;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
   }
   .left-count {
     font-size: 13px;
@@ -162,7 +162,7 @@ const S = `
   }
   .brief-row:last-child { border-bottom: none; }
   .brief-row:hover { background: var(--hover); }
-  .brief-row.is-hovered { background: var(--hover); }
+  .brief-row.is-open  { background: var(--hover); }
 
   .row-top { display: flex; align-items: flex-start; gap: 14px; }
   .b-num {
@@ -181,7 +181,7 @@ const S = `
     line-height: 1.45;
     transition: color 0.2s;
   }
-  .brief-row.is-hovered .b-title { color: #2a2a2a; }
+  .brief-row.is-open .b-title { color: #2a2a2a; }
   .b-date {
     font-size: 11.5px;
     color: var(--muted);
@@ -194,11 +194,11 @@ const S = `
     overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transition: max-height 0.38s ease, opacity 0.25s ease, transform 0.3s ease;
+    transition: opacity 0.22s ease, transform 0.22s ease;
     transform: translateY(5px);
     padding-left: 25px;
   }
-  .brief-row.is-hovered .thesis-wrap {
+  .brief-row.is-open .thesis-wrap {
     max-height: 200px;
     opacity: 1;
     transform: translateY(0);
@@ -227,7 +227,7 @@ const S = `
     transition: color 0.18s;
   }
   .act-btn:hover { color: var(--terra); }
-  .act-sec { color: var(--muted); font-weight: 500; }
+  .act-sec { font-weight: 500; }
   .act-sec:hover { color: var(--terra); }
 
   /* Loading */
@@ -311,11 +311,11 @@ const S = `
   }
   .o-title {
     font-size: 1.6rem;
-    font-weight: 700;
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 900;
+    font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
     line-height: 1.25;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     margin-bottom: 22px;
   }
   .o-rule { height: 1px; background: var(--border); margin-bottom: 24px; }
@@ -593,16 +593,8 @@ function App() {
 /* ─── List ────────────────────────────────────────────────────────── */
 function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, onOpenSummary, onOpenFull }) {
   const totalPages  = Math.ceil(totalBriefs / perPage);
-  const [hoveredId, setHoveredId] = useState(null);
-  const leaveTimer  = useRef(null);
-
-  const handleEnter = (id) => {
-    clearTimeout(leaveTimer.current);
-    setHoveredId(id);
-  };
-  const handleLeave = () => {
-    leaveTimer.current = setTimeout(() => setHoveredId(null), 160);
-  };
+  const [expandedId, setExpandedId] = useState(null);
+  const toggleRow = (id) => setExpandedId(prev => prev === id ? null : id);
   /* Brief 01 = oldest ever published; number persists across pages.
      API returns newest-first, so position i on page p maps to:
      absoluteNumber = totalBriefs - ((page-1)*perPage + i)        */
@@ -616,8 +608,7 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
           <p className="left-count">{briefs.length} published</p>
         )}
         <p className="left-desc">
-          Arguments on what AI means for how humans work, learn, and lead.
-          Hover any title to read the core claim.
+          Co-Intelligence. Design-led AI Governance. The Future of Learning Systems.
         </p>
       </div>
       <div className="right-col">
@@ -635,9 +626,9 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
           return (
             <div
               key={b.id}
-              className={`brief-row${hoveredId === b.id ? ' is-hovered' : ''}`}
-              onMouseEnter={() => handleEnter(b.id)}
-              onMouseLeave={handleLeave}
+              className={`brief-row${expandedId === b.id ? ' is-open' : ''}`}
+              onClick={() => toggleRow(b.id)}
+              style={{cursor: 'pointer'}}
             >
               <div className="row-top">
                 <span className="b-num">{briefNum(i)}</span>
