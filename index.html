@@ -131,11 +131,11 @@ const S = `
     color: var(--muted);
   }
   .left-heading {
-    font-size: 2rem;
+    font-size: 2.6rem;
     font-weight: 900;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text);
-    line-height: 1.15;
+    line-height: 1.1;
     letter-spacing: -0.03em;
   }
   .left-count {
@@ -462,16 +462,12 @@ function App() {
 
   /* iframe resize */
   useEffect(() => {
-    let timer;
     const ro = new ResizeObserver(() => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        const h = wrapRef.current?.offsetHeight ?? 0;
-        window.parent.postMessage({ type: 'X-resize', height: h }, '*');
-      }, 260); // fires once after transition settles
+      const h = wrapRef.current?.offsetHeight ?? 0;
+      window.parent.postMessage({ type: 'X-resize', height: h }, '*');
     });
     if (wrapRef.current) ro.observe(wrapRef.current);
-    return () => { ro.disconnect(); clearTimeout(timer); };
+    return () => ro.disconnect();
   }, []);
 
   /* Fetch brief list — re-runs when page changes */
