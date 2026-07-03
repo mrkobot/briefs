@@ -18,20 +18,28 @@
 <body>
 <div id="root"></div>
 
-<!-- Vanilla JS Resize Observer: Completely independent of React -->
+<!-- Bulletproof Height Poller -->
 <script>
-  window.addEventListener('DOMContentLoaded', () => {
-    const sendHeight = () => {
-      const root = document.getElementById('root');
-      if (root) {
-        window.parent.postMessage({ type: 'X-resize', height: root.scrollHeight }, '*');
-      }
-    };
+  let lastHeight = 0;
+  
+  function sendHeight() {
+    // Target the specific wrapper React creates, fallback to the root div
+    const container = document.querySelector('.wrap') || document.getElementById('root');
+    if (!container) return;
+
+    // Get the physical height of the container
+    const currentHeight = container.offsetHeight;
     
-    // Observe the entire body for layout shifts, API loads, and tab changes
-    const ro = new ResizeObserver(sendHeight);
-    ro.observe(document.body);
-  });
+    // Only send a message if the height actually changed (and is greater than 0)
+    if (currentHeight !== lastHeight && currentHeight > 10) {
+      lastHeight = currentHeight;
+      window.parent.postMessage({ type: 'X-resize', height: currentHeight }, '*');
+    }
+  }
+
+  // Check the height 6 times a second. 
+  // Extremely lightweight, immune to React/Babel rendering quirks.
+  setInterval(sendHeight, 150);
 </script>
 
 <script type="text/babel">
