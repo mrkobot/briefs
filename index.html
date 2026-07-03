@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Co-Intelligence Briefs — What If Love</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?Inter:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -132,11 +132,11 @@ const S = `
   }
   .left-heading {
     font-size: 2rem;
-    font-weight: 900;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 700;
+    font-family: 'DM Sans', system-ui, sans-serif;
     color: var(--text);
     line-height: 1.15;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
   }
   .left-count {
     font-size: 13px;
@@ -162,6 +162,7 @@ const S = `
   }
   .brief-row:last-child { border-bottom: none; }
   .brief-row:hover { background: var(--hover); }
+  .brief-row.is-hovered { background: var(--hover); }
 
   .row-top { display: flex; align-items: flex-start; gap: 14px; }
   .b-num {
@@ -180,7 +181,7 @@ const S = `
     line-height: 1.45;
     transition: color 0.2s;
   }
-  .brief-row:hover .b-title { color: #2a2a2a; }
+  .brief-row.is-hovered .b-title { color: #2a2a2a; }
   .b-date {
     font-size: 11.5px;
     color: var(--muted);
@@ -197,7 +198,7 @@ const S = `
     transform: translateY(5px);
     padding-left: 25px;
   }
-  .brief-row:hover .thesis-wrap {
+  .brief-row.is-hovered .thesis-wrap {
     max-height: 200px;
     opacity: 1;
     transform: translateY(0);
@@ -310,11 +311,11 @@ const S = `
   }
   .o-title {
     font-size: 1.6rem;
-    font-weight: 900;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-weight: 700;
+    font-family: 'DM Sans', system-ui, sans-serif;
     color: var(--text);
     line-height: 1.25;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     margin-bottom: 22px;
   }
   .o-rule { height: 1px; background: var(--border); margin-bottom: 24px; }
@@ -406,6 +407,30 @@ const S = `
   .sub-btn:disabled { opacity: 0.5; cursor: default; }
   .sub-ok { font-size: 13.5px; font-weight: 600; color: var(--text); padding: 10px 0; }
 
+  /* ── Pagination ── */
+  .page-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 44px 20px 36px;
+    border-top: 1px solid var(--border);
+  }
+  .page-nav:empty { display: none; }
+  .nav-btn {
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: inherit;
+    color: var(--muted);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: color 0.18s;
+  }
+  .nav-btn:hover { color: var(--terra); }
+  .nav-spacer { flex: 1; }
+
   @media (max-width: 620px) {
     .list-layout { grid-template-columns: 1fr; }
     .left-col { border-right: none; border-bottom: 1px solid var(--border); padding: 28px 24px; }
@@ -422,6 +447,10 @@ function App() {
   const [briefs, setBriefs]         = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
+  const [page, setPage]             = useState(1);
+  const [totalBriefs, setTotalBriefs] = useState(0);
+  const catIdRef = useRef(null);
+  const PER_PAGE = 6;
   const [active, setActive]         = useState(null);
   const [tab, setTab]               = useState('summary');
   const [fullHtml, setFullHtml]     = useState('');
@@ -441,18 +470,25 @@ function App() {
     return () => ro.disconnect();
   }, []);
 
-  /* Fetch brief list */
+  /* Fetch brief list — re-runs when page changes */
   useEffect(() => {
     (async () => {
+      setLoading(true);
       try {
-        const catRes = await fetch(`${SITE}/wp-json/wp/v2/categories?slug=${CAT_SLUG}`);
-        const cats   = await catRes.json();
-        if (!cats.length) throw new Error();
+        /* Get category ID once and cache it */
+        if (!catIdRef.current) {
+          const catRes = await fetch(`${SITE}/wp-json/wp/v2/categories?slug=${CAT_SLUG}`);
+          const cats   = await catRes.json();
+          if (!cats.length) throw new Error();
+          catIdRef.current = cats[0].id;
+        }
         const postsRes = await fetch(
-          `${SITE}/wp-json/wp/v2/posts?categories=${cats[0].id}` +
-          `&per_page=20&orderby=date&order=asc` +
+          `${SITE}/wp-json/wp/v2/posts?categories=${catIdRef.current}` +
+          `&per_page=${PER_PAGE}&page=${page}&orderby=date&order=desc` +
           `&_fields=id,slug,title,date,link,excerpt`
         );
+        const total = parseInt(postsRes.headers.get('X-WP-Total') ?? '0', 10);
+        setTotalBriefs(total);
         setBriefs(await postsRes.json());
       } catch {
         setError('Briefs could not be loaded.');
@@ -460,7 +496,7 @@ function App() {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [page]);
 
   /* Fetch full brief content */
   const fetchFull = async (slug) => {
@@ -541,6 +577,10 @@ function App() {
             briefs={briefs}
             loading={loading}
             error={error}
+            page={page}
+            totalBriefs={totalBriefs}
+            perPage={PER_PAGE}
+            onPage={p => { setPage(p); setActive(null); }}
             onOpenSummary={b => openBrief(b, 'summary')}
             onOpenFull={b    => openBrief(b, 'full')}
           />
@@ -551,7 +591,22 @@ function App() {
 }
 
 /* ─── List ────────────────────────────────────────────────────────── */
-function ListView({ briefs, loading, error, onOpenSummary, onOpenFull }) {
+function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, onOpenSummary, onOpenFull }) {
+  const totalPages  = Math.ceil(totalBriefs / perPage);
+  const [hoveredId, setHoveredId] = useState(null);
+  const leaveTimer  = useRef(null);
+
+  const handleEnter = (id) => {
+    clearTimeout(leaveTimer.current);
+    setHoveredId(id);
+  };
+  const handleLeave = () => {
+    leaveTimer.current = setTimeout(() => setHoveredId(null), 160);
+  };
+  /* Brief 01 = oldest ever published; number persists across pages.
+     API returns newest-first, so position i on page p maps to:
+     absoluteNumber = totalBriefs - ((page-1)*perPage + i)        */
+  const briefNum = (i) => pad(Math.max(1, totalBriefs - ((page - 1) * perPage + i)));
   return (
     <div className="list-layout">
       <div className="left-col">
@@ -578,9 +633,14 @@ function ListView({ briefs, loading, error, onOpenSummary, onOpenFull }) {
             ?? (stripHtml(b.excerpt?.rendered ?? '').slice(0, 160).trim() + '\u2026');
           const hasSummary = !!(curated?.summary);
           return (
-            <div key={b.id} className="brief-row">
+            <div
+              key={b.id}
+              className={`brief-row${hoveredId === b.id ? ' is-hovered' : ''}`}
+              onMouseEnter={() => handleEnter(b.id)}
+              onMouseLeave={handleLeave}
+            >
               <div className="row-top">
-                <span className="b-num">{pad(i + 1)}</span>
+                <span className="b-num">{briefNum(i)}</span>
                 <div className="b-right">
                   <p className="b-title" dangerouslySetInnerHTML={{ __html: b.title.rendered }} />
                   <p className="b-date">{formatDate(b.date)}</p>
@@ -606,6 +666,19 @@ function ListView({ briefs, loading, error, onOpenSummary, onOpenFull }) {
           );
         })}
       </div>
+
+      {/* Pagination — only rendered when > 1 page exists */}
+      {!loading && !error && totalPages > 1 && (
+        <div className="page-nav">
+          {page < totalPages ? (
+            <button className="nav-btn" onClick={() => onPage(page + 1)}>← Older</button>
+          ) : <span />}
+          <span className="nav-spacer" />
+          {page > 1 && (
+            <button className="nav-btn" onClick={() => onPage(page - 1)}>Newer →</button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
