@@ -23,7 +23,7 @@ const { useState, useEffect, useRef } = React;
 
 const SITE     = 'https://whatiflove.org';
 const CAT_SLUG = 'co-intelligence-briefs';
-const WEBHOOK  = 'MAKE_WEBHOOK_URL_HERE';
+const WEBHOOK  = 'https://hook.us2.make.com/1ggpdohfm18olxxnvjs7pjgnsnyf9apd';
 
 /* ─── Curated content ─────────────────────────────────────────────
    Key: WordPress post slug.
@@ -544,7 +544,7 @@ function App() {
       await fetch(WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), source: 'briefs' }),
+        body: JSON.stringify({ name: 'Subscriber', email: email.trim(), message: 'subscribe', source: 'briefs' }),
       });
     } catch {}
     setSubbed(true);
