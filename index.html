@@ -32,6 +32,14 @@ const WEBHOOK  = 'https://hook.us2.make.com/1ggpdohfm18olxxnvjs7pjgnsnyf9apd';
    the hover thesis, and opens directly to the full brief tab.
 ──────────────────────────────────────────────────────────────────── */
 const CURATED = {
+  'definition-is-policy': {
+    thesis: 'An Arizona bill defined AI readiness as prompting and moved through four months of process without one objection—the definition nobody contests becomes the curriculum every child inherits.',
+    summary: [
+      'House Bill 4005 would have obligated every public school in Arizona to prepare students with basic skills in prompting. It survived a committee, two amendments, a conference, four floor votes, and a veto. Across four months, not one actor—not the sponsor, not either chamber, not the governor who killed it—contested that prompting was what readiness meant. The bill died over an unrelated exemption for charter schools. The definition passed from inception to death untouched.',
+      'Tool fluency expires on the model release schedule; whatever counts as skilled prompting now will look like a search-engine trick in eighteen months. What does not expire is the capacity to direct a capable system toward purposes it cannot set for itself, which requires knowing what is worth doing at all. The distinction is not academic, because AI is a multiplier and not an equalizer. It arrives as the same capability, the same day, free, for everyone—and it doubles whoever is already ahead. Handed to a child who can steer, it makes them formidable. Handed to a child who cannot, it makes them fast and empty. The only variable is readiness, and Arizona was about to define readiness as the thing that expires.',
+      'This is where AI policy converges with civil rights. Civil rights law was never written for its authors; its true beneficiaries are mostly unborn. A generation that has finally paid enough to see a harm encodes what it learned into governance, so that people it will never meet inherit the knowledge as a law of the land. HB4005 was scheduled to take effect in 2027-28. No one spoke against it because the people who would have needed to are still in the second grade. Forward-thinking is not a temperament in this work but a critical deliverable. Definitions become curriculum. Curriculum becomes habit. Habits become a generation\'s conception of intelligence itself.',
+    ],
+  },
   'the-skills-everyone-is-building-wont-be-the-skills-that-matter': {
     thesis: 'Most AI training invests in skills that will expire as AI improves—the durable ones are the ones nobody has started measuring yet.',
     summary: [
@@ -414,15 +422,16 @@ const S = `
   .sub-btn:disabled { opacity: 0.5; cursor: default; }
   .sub-ok { font-size: 13.5px; font-weight: 600; color: var(--text); padding: 10px 0; }
 
-  /* ── Pagination ── */
+  /* ── Pagination ──
+     Lives inside .right-col so it sits under the brief list.
+     No border-top: when this renders, the last .brief-row is no longer
+     :last-child and keeps its own border-bottom, which is the divider. */
   .page-nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 20px 44px 20px 36px;
-    border-top: 1px solid var(--border);
   }
-  .page-nav:empty { display: none; }
   .nav-btn {
     font-size: 12.5px;
     font-weight: 700;
@@ -446,6 +455,7 @@ const S = `
     .overlay { padding: 28px 24px; }
     .left-heading { font-size: 2rem; }
     .o-title { font-size: 1.6rem; }
+    .page-nav { padding: 20px 24px; }
   }
 `;
 
@@ -603,8 +613,8 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
       <div className="left-col">
         <p className="left-label">What If Love</p>
         <h2 className="left-heading">Co-Intelligence<br />Briefs</h2>
-        {!loading && !error && briefs.length > 0 && (
-          <p className="left-count">{briefs.length} published</p>
+        {!loading && !error && totalBriefs > 0 && (
+          <p className="left-count">{totalBriefs} published</p>
         )}
         <p className="left-desc">
           Co-Intelligence. Design-led AI Governance. The Future of Learning Systems.
@@ -655,20 +665,20 @@ function ListView({ briefs, loading, error, page, totalBriefs, perPage, onPage, 
             </div>
           );
         })}
-      </div>
 
-      {/* Pagination — only rendered when > 1 page exists */}
-      {!loading && !error && totalPages > 1 && (
-        <div className="page-nav">
-          {page < totalPages ? (
-            <button className="nav-btn" onClick={() => onPage(page + 1)}>← Older</button>
-          ) : <span />}
-          <span className="nav-spacer" />
-          {page > 1 && (
-            <button className="nav-btn" onClick={() => onPage(page - 1)}>Newer →</button>
-          )}
-        </div>
-      )}
+        {/* Pagination — only rendered when > 1 page exists */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="page-nav">
+            {page < totalPages ? (
+              <button className="nav-btn" onClick={() => onPage(page + 1)}>← Older</button>
+            ) : <span />}
+            <span className="nav-spacer" />
+            {page > 1 && (
+              <button className="nav-btn" onClick={() => onPage(page - 1)}>Newer →</button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
